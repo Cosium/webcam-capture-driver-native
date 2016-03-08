@@ -1,0 +1,8 @@
+[submodule "src/libyuv"]
+	path = src/libyuv
+	url = https://github.com/frankpapenmeier/libyuv.git
+	branch = webcam-capture-driver-native
+[submodule "src/video-capture-library"]
+	path = src/video-capture-library
+	url = https://github.com/frankpapenmeier/video-capture-library.git
+	branch = webcam-capture-driver-native
