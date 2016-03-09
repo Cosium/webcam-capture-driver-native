@@ -70,7 +70,7 @@ add_jar(WebcamCaptureTestShowCapturedFile
 				test/WebcamCaptureTestShowCapturedFile.java
 )
 add_dependencies(WebcamCaptureTestShowCapturedFile WebcamCaptureTestCaptureToFile)
-add_test(NAME TestWebcamCaptureTestShowCapturedFile COMMAND ${Java_JAVA_EXECUTABLE} -cp "WebcamCaptureTestShowCapturedFile.jar" WebcamCaptureTestShowCapturedFile "$<CONFIGURATION>/captured.rgb")
+add_test(NAME TestWebcamCaptureTestShowCapturedFile COMMAND ${Java_JAVA_EXECUTABLE} -cp "WebcamCaptureTestShowCapturedFile.jar" WebcamCaptureTestShowCapturedFile "captured.rgb")
 
 
 # Build with /MT instead of /MD on Windows
