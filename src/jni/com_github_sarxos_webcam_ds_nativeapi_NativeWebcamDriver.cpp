@@ -21,9 +21,9 @@ JNIEXPORT jint JNICALL Java_com_github_sarxos_webcam_ds_nativeapi_NativeWebcamDr
 
 	std::vector<jint> tmp_devicesIndex;
 	std::vector<std::string> tmp_devicesName;
-	std::vector<std::vector<jint>> tmp_devicesCapabilityIndex;
-	std::vector<std::vector<jint>> tmp_devicesResolutionX;
-	std::vector<std::vector<jint>> tmp_devicesResolutionY;
+	std::vector<std::vector<jint> > tmp_devicesCapabilityIndex;
+	std::vector<std::vector<jint> > tmp_devicesResolutionX;
+	std::vector<std::vector<jint> > tmp_devicesResolutionY;
 	
 	for (size_t i = 0; i < numDevicesFound; ++i) {
 		/* Capabilities */
@@ -33,7 +33,7 @@ JNIEXPORT jint JNICALL Java_com_github_sarxos_webcam_ds_nativeapi_NativeWebcamDr
 		for (size_t j = 0; j < caps.size(); ++j) {
 			Capability cb = caps[j];
 			if (std::find(supportedPixelFormats.begin(), supportedPixelFormats.end(), cb.pixel_format) != supportedPixelFormats.end()) { // is supported
-				boolean insertCb = true;
+				jboolean insertCb = true;
 				for (size_t k = 0; k < bestCaps.size(); ++k) {
 					Capability curBest = bestCaps[k];
 					if (curBest.height == cb.height && curBest.width == cb.width) {

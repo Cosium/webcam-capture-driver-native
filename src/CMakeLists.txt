@@ -1,5 +1,11 @@
 cmake_minimum_required(VERSION 3.5)
 
+set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LANGUAGE_STANDARD "c++11")
+set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libc++")
+
+set(CMAKE_CONFIGURATION_TYPES "Release" CACHE STRING "Build as Release by default")
+set(CMAKE_OSX_DEPLOYMENT_TARGET "10.8" CACHE STRING "Support OS X down to 10.8 (earlier versions not tested)")
+
 project (WebcamCaptureDriverNative)
 
 find_package(JNI REQUIRED)
@@ -13,7 +19,7 @@ set(slf4j-jar "${CMAKE_CURRENT_SOURCE_DIR}/java/extern/slf4j-api-1.7.2.jar")
 
 enable_testing()
 
-set(USE_GENERATE_X86 ON)
+set(USE_GENERATE_X86 ON CACHE BOOL "Currently OS X and Windows supported: Therefore ON by default")
 add_subdirectory(${video-capture-library-path}/build)
 
 add_subdirectory(${libyuv-path})
@@ -47,7 +53,10 @@ target_link_libraries(webcam-capture-driver-native videocapture yuv)
 
 
 
-
+set(JAVA_CP_SEPARATOR ":")
+if(WIN32)
+    set(JAVA_CP_SEPARATOR ";")
+endif()
 
 
 add_jar(WebcamCaptureTestUseNativeDriver
@@ -58,10 +67,10 @@ add_jar(WebcamCaptureTestUseNativeDriver
 				webcam-capture-driver-native-jar
 )
 add_dependencies(WebcamCaptureTestUseNativeDriver webcam-capture-driver-native)
-add_test(NAME TestWebcamCaptureTestUseNativeDriver COMMAND ${Java_JAVA_EXECUTABLE} -Djava.library.path=$<CONFIGURATION> -cp "WebcamCaptureTestUseNativeDriver.jar;webcam-capture-driver-native.jar;${webcam-capture-jar};${slf4j-jar}" WebcamCaptureTestUseNativeDriver)
+add_test(NAME TestWebcamCaptureTestUseNativeDriver COMMAND ${Java_JAVA_EXECUTABLE} -Djava.library.path=$<CONFIGURATION> -cp "WebcamCaptureTestUseNativeDriver.jar${JAVA_CP_SEPARATOR}webcam-capture-driver-native.jar${JAVA_CP_SEPARATOR}${webcam-capture-jar}${JAVA_CP_SEPARATOR}${slf4j-jar}" WebcamCaptureTestUseNativeDriver)
 
-add_executable(WebcamCaptureTestCaptureToFile test/WebcamCaptureTestCaptureToFile.cpp) 
-target_include_directories(WebcamCaptureTestCaptureToFile PRIVATE ${JNI_INCLUDE_DIRS} ${CMAKE_BINARY_DIR} ${video-capture-library-path}/include ${libyuv-path}/include)
+add_executable(WebcamCaptureTestCaptureToFile test/WebcamCaptureTestCaptureToFile.cpp)
+target_include_directories(WebcamCaptureTestCaptureToFile PRIVATE ${CMAKE_BINARY_DIR} ${video-capture-library-path}/include ${libyuv-path}/include)
 target_link_libraries(WebcamCaptureTestCaptureToFile videocapture yuv)
 add_test(NAME TestWebcamCaptureTestCaptureToFile COMMAND WebcamCaptureTestCaptureToFile)
 
@@ -71,6 +80,11 @@ add_jar(WebcamCaptureTestShowCapturedFile
 )
 add_dependencies(WebcamCaptureTestShowCapturedFile WebcamCaptureTestCaptureToFile)
 add_test(NAME TestWebcamCaptureTestShowCapturedFile COMMAND ${Java_JAVA_EXECUTABLE} -cp "WebcamCaptureTestShowCapturedFile.jar" WebcamCaptureTestShowCapturedFile "captured.rgb")
+
+
+set(webcam-capture-install-bin-directory ${CMAKE_CURRENT_SOURCE_DIR}/../bin)
+install(TARGETS webcam-capture-driver-native DESTINATION ${webcam-capture-install-bin-directory})
+install_jar(webcam-capture-driver-native-jar ${webcam-capture-install-bin-directory})
 
 
 # Build with /MT instead of /MD on Windows

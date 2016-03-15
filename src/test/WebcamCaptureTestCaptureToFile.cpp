@@ -57,40 +57,82 @@ int main() {
   cap.listCapabilities(cfg.device);
 
   printf("\n##########\n");
-
-  std::vector<Capability> caps = cap.getCapabilities(0);
-
-  if(cap.open(cfg) < 0) {
-    printf("Error: cannot open the device.\n");
-    ::exit(EXIT_FAILURE);
-  }
-
-  if(cap.start() < 0) {
-    printf("Error: cannot start capture.\n");
-    ::exit(EXIT_FAILURE);
-  }
-
-  while(must_run == true) {
-    cap.update();
+    
+  std::vector<Capability> caps = cap.getCapabilities(cfg.device);
+    
+  std::vector<int> supportedPixelFormats = { CA_RGB24, CA_YUV420P, CA_YUYV422, CA_YUV420BP };
+    
+    std::vector<Capability> bestCaps;
+    for (size_t j = 0; j < caps.size(); ++j) {
+        Capability cb = caps[j];
+        if(cb.width == width && cb.height == height) {
+            if (std::find(supportedPixelFormats.begin(), supportedPixelFormats.end(), cb.pixel_format) != supportedPixelFormats.end()) { // is supported
+                bool insertCb = true;
+                for (size_t k = 0; k < bestCaps.size(); ++k) {
+                    Capability curBest = bestCaps[k];
+                    if (curBest.height == cb.height && curBest.width == cb.width) {
+                        insertCb = false; // cap with resolution already exists
+                        if (cb.fps > curBest.fps || (cb.fps == curBest.fps && std::find(supportedPixelFormats.begin(), supportedPixelFormats.end(), cb.pixel_format) < std::find(supportedPixelFormats.begin(), supportedPixelFormats.end(), curBest.pixel_format))) {
+                            bestCaps.erase(bestCaps.begin() + k);
+                            insertCb = true; // new cap is better
+                            break;
+                        }
+                    }
+                }
+                if (insertCb) {
+                    bestCaps.push_back(cb);
+                }
+            }
+        }
+    }
+    
+    if (bestCaps.size() > 0) { // Current Device features at least one supported Pixel Format
+      
+        cfg.capability = bestCaps[0].capability_index;
+        
+        
+        printf("Using capability: %d\n", cfg.capability);
+        printf("\n##########\n");
+        
+        
+        if(cap.open(cfg) < 0) {
+            printf("Error: cannot open the device.\n");
+            ::exit(EXIT_FAILURE);
+        }
+        
+        if(cap.start() < 0) {
+            printf("Error: cannot start capture.\n");
+            ::exit(EXIT_FAILURE);
+        }
+        
+        while(must_run == true) {
+            cap.update();
 #if defined(_WIN32)
-    Sleep(5);
+            Sleep(5);
 #else
-    usleep(5 * 1000);
+            usleep(5 * 1000);
 #endif
-  }
+        }
+        
+        if(cap.stop() < 0) {
+            printf("Error: cannot stop.\n");
+        }
+        if(cap.close() < 0) {
+            printf("Error: cannot close.\n");
+        }
+        
+        outfile.flush();
+        outfile.close();
+        printf("Info: Wrote raw YUV file.\n");
+        
+        return EXIT_SUCCESS;
 
-  if(cap.stop() < 0) {
-    printf("Error: cannot stop.\n");
-  }
-  if(cap.close() < 0) {
-    printf("Error: cannot close.\n");
-  }
+    }
+    else {
+        printf("No compatible pixel format found. Closing without capture!");
+        return EXIT_FAILURE;
+    }
 
-  outfile.flush();
-  outfile.close();
-  printf("Info: Wrote raw YUV file.\n");
-
-  return EXIT_SUCCESS;
 }
 
 int count = 0;
@@ -101,12 +143,14 @@ std::chrono::high_resolution_clock::time_point time_last_frame = std::chrono::hi
 void fcallback(PixelBuffer& buffer) { 
 
   std::chrono::high_resolution_clock::time_point time_now = std::chrono::high_resolution_clock::now();
-  std::chrono::duration<double> time_span_frames = std::chrono::duration_cast<std::chrono::duration<double>>(time_now - time_last_frame);
-  printf("Frame callback: %lu bytes, stride: %lu, time since last frame: %f ms \n", buffer.nbytes, buffer.stride[0], time_span_frames *1000);
+  auto time_span_frames = std::chrono::duration_cast<std::chrono::nanoseconds>(time_now - time_last_frame).count();
+  printf("Frame callback: %lu bytes, stride: %lu, time since last frame: %f ms \n", buffer.nbytes, buffer.stride[0], time_span_frames/1000.0/1000.0);
   time_last_frame = time_now;
 
   size_t width = buffer.width[0];
   size_t height = buffer.height[0];
+    
+  printf("Frame width: %lu, height: %lu \n", width, height);
 
   if (argbImageLength == -1 || argbImageLength != width * height * 4) {
 	  argbImageLength = width * height * 4;
@@ -131,9 +175,9 @@ void fcallback(PixelBuffer& buffer) {
 
   std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
 
-  std::chrono::duration<double> time_span = std::chrono::duration_cast<std::chrono::duration<double>>(t2 - t1);
+  auto time_span = std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1).count();
 
-  printf("Time for ARGB conversion: %f ms \n", time_span*1000);
+  printf("Time for ARGB conversion: %f ms \n", time_span/1000.0/1000.0);
 
   count++;
 
