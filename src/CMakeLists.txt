@@ -23,6 +23,7 @@ find_package(Java 1.7 COMPONENTS Development REQUIRED)
 include(UseJava)
 message(STATUS "Found Java_JAVA_EXECUTABLE: ${Java_JAVA_EXECUTABLE}")
 message(STATUS "Found JNI_INCLUDE_DIRS: ${JNI_INCLUDE_DIRS}")
+SET(CMAKE_JAVA_COMPILE_FLAGS ${CMAKE_JAVA_COMPILE_FLAGS} -source 1.7 -target 1.7)
 
 
 set(libyuv-path  "libyuv")
