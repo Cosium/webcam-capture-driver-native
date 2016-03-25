@@ -105,6 +105,27 @@ public class NativeWebcamDevice implements WebcamDevice, WebcamDevice.BufferAcce
 			throw new WebcamException("Error at native layer while opening webcam");
 		}
 
+		// Wait for first image to be captured - max wait: 10 seconds
+		long timeWaitForImageStop = System.currentTimeMillis() + 10000L;
+		boolean imageCaptured = false;
+		while (System.currentTimeMillis() < timeWaitForImageStop && ! imageCaptured) {
+			// Has ByteBuffer been filled with pixel data already?
+			ByteBuffer byteBufferARGBReadOnly = byteBufferARGB.asReadOnlyBuffer(); // asReadOnly: new position marker that does not affect original byteBufferARGB
+			while (byteBufferARGBReadOnly.hasRemaining()) {
+				if (byteBufferARGBReadOnly.get() != 0) {
+					imageCaptured = true;
+					break;
+				}
+			}
+
+			try {
+				if (! imageCaptured) {
+					Thread.sleep(100);
+				}
+			} catch (InterruptedException exc) {
+			}
+		}
+
 		isOpen = true;
 	}
 
