@@ -32,14 +32,32 @@ public class NativeWebcamDriver implements WebcamDriver {
 	private int[][] devicesResolutionY; // 1: index; 2: supported resolutions
 
 	public NativeWebcamDriver() {
+	
+		/* 
+		 *  Load native backend
+		 *  Problem: There is no reliable way to determine the bitness of the JVM across different JVM implementations
+		 *  Workaround: Try to load 32 bit library first and if fails then try to load 64 bit library
+		 */
+		boolean libLoaded = false;
 		try {
-			System.loadLibrary("webcam-capture-driver-native");
+			System.loadLibrary("webcam-capture-driver-native-32");
+			libLoaded = true;
 		} catch (Exception e) {
-			throw new WebcamException("NativeWebcamDriver: Failed to load JNI backend");
 		} catch (Error e) {
-			throw new WebcamException("NativeWebcamDriver: Failed to load JNI backend");
 		}
 
+		if (! libLoaded) {
+			try {
+				System.loadLibrary("webcam-capture-driver-native-64");
+				libLoaded = true;
+			} catch (Exception e) {
+			} catch (Error e) {
+			}
+		}
+		
+		if (! libLoaded) {
+			throw new WebcamException("NativeWebcamDriver: Failed to load JNI backend");
+		}
 	}
 
 	@Override

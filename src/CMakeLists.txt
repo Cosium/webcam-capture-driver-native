@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.5.1)
 
 set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LANGUAGE_STANDARD "c++11")
 set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libc++")
@@ -8,9 +8,22 @@ set(CMAKE_OSX_DEPLOYMENT_TARGET "10.8" CACHE STRING "Support OS X down to 10.8 (
 
 project (WebcamCaptureDriverNative)
 
+if (CMAKE_SIZEOF_VOID_P EQUAL 8)
+	set(bitness 64)
+elseif(CMAKE_SIZEOF_VOID_P EQUAL 4)
+	set(bitness 32)
+else()
+	message(FATAL_ERROR "Unable to identify bitness of target architecture")
+endif()
+
+message(STATUS "QUERY JAVA_HOME: ${JAVA_HOME}")
+message(STATUS "QUERY ENV_JAVA_HOME: $ENV{JAVA_HOME}")
 find_package(JNI REQUIRED)
 find_package(Java 1.7 COMPONENTS Development REQUIRED)
 include(UseJava)
+message(STATUS "Found Java_JAVA_EXECUTABLE: ${Java_JAVA_EXECUTABLE}")
+message(STATUS "Found JNI_INCLUDE_DIRS: ${JNI_INCLUDE_DIRS}")
+
 
 set(libyuv-path  "libyuv")
 set(video-capture-library-path  "video-capture-library")
@@ -43,13 +56,13 @@ create_javah(TARGET webcam-capture-driver-native-javah
 					webcam-capture-driver-native-jar;${webcam-capture-jar}
 )
 
-add_library(webcam-capture-driver-native SHARED
+add_library(webcam-capture-driver-native-${bitness} SHARED
 				jni/com_github_sarxos_webcam_ds_nativeapi_NativeWebcamDevice.cpp
 				jni/com_github_sarxos_webcam_ds_nativeapi_NativeWebcamDriver.cpp
 )
-target_include_directories(webcam-capture-driver-native PRIVATE ${JNI_INCLUDE_DIRS} ${CMAKE_BINARY_DIR} ${video-capture-library-path}/include ${libyuv-path}/include)
-add_dependencies(webcam-capture-driver-native webcam-capture-driver-native-javah)
-target_link_libraries(webcam-capture-driver-native videocapture yuv)
+target_include_directories(webcam-capture-driver-native-${bitness} PRIVATE ${JNI_INCLUDE_DIRS} ${CMAKE_BINARY_DIR} ${video-capture-library-path}/include ${libyuv-path}/include)
+add_dependencies(webcam-capture-driver-native-${bitness} webcam-capture-driver-native-javah)
+target_link_libraries(webcam-capture-driver-native-${bitness} videocapture yuv)
 
 
 
@@ -66,7 +79,7 @@ add_jar(WebcamCaptureTestUseNativeDriver
 				${webcam-capture-jar}
 				webcam-capture-driver-native-jar
 )
-add_dependencies(WebcamCaptureTestUseNativeDriver webcam-capture-driver-native)
+add_dependencies(WebcamCaptureTestUseNativeDriver webcam-capture-driver-native-${bitness})
 add_test(NAME TestWebcamCaptureTestUseNativeDriver COMMAND ${Java_JAVA_EXECUTABLE} -Djava.library.path=$<CONFIGURATION> -cp "WebcamCaptureTestUseNativeDriver.jar${JAVA_CP_SEPARATOR}webcam-capture-driver-native.jar${JAVA_CP_SEPARATOR}${webcam-capture-jar}${JAVA_CP_SEPARATOR}${slf4j-jar}" WebcamCaptureTestUseNativeDriver)
 
 add_executable(WebcamCaptureTestCaptureToFile test/WebcamCaptureTestCaptureToFile.cpp)
@@ -83,7 +96,7 @@ add_test(NAME TestWebcamCaptureTestShowCapturedFile COMMAND ${Java_JAVA_EXECUTAB
 
 
 set(webcam-capture-install-bin-directory ${CMAKE_CURRENT_SOURCE_DIR}/../bin)
-install(TARGETS webcam-capture-driver-native DESTINATION ${webcam-capture-install-bin-directory})
+install(TARGETS webcam-capture-driver-native-${bitness} RUNTIME DESTINATION ${webcam-capture-install-bin-directory} LIBRARY DESTINATION ${webcam-capture-install-bin-directory})
 install_jar(webcam-capture-driver-native-jar ${webcam-capture-install-bin-directory})
 
 
