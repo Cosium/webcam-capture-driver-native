@@ -33,6 +33,11 @@ public class NativeWebcamDriver implements WebcamDriver {
 
 	public NativeWebcamDriver() {
 	
+		// Windows: Microsoft Media Foundation requires Windows 7 or higher (6.1 and above)
+		if (System.getProperty("os.name").toLowerCase().indexOf("win") >= 0 && Double.valueOf(System.getProperty("os.version")) < 6.1) { 
+			throw new WebcamException("NativeWebcamDriver requires Windows 7 or higher on Windows systems");
+		}
+	
 		/* 
 		 *  Load native backend
 		 *  Problem: There is no reliable way to determine the bitness of the JVM across different JVM implementations
@@ -62,11 +67,6 @@ public class NativeWebcamDriver implements WebcamDriver {
 
 	@Override
 	public List<WebcamDevice> getDevices() {
-
-		if (System.getProperty("os.name").toLowerCase().indexOf("win") >= 0 && Double.valueOf(System.getProperty("os.version")) < 6.1) { // Windows: Microsoft Media Foundation requires Windows 7 or higher (6.1 and above)
-			throw new WebcamException("NativeWebcamDriver requires Windows 7 or higher on Windows systems");
-		}
-
 		List<WebcamDevice> devices = new ArrayList<WebcamDevice>();
 
 		if (nativeGetDevices() == 0) { // success
