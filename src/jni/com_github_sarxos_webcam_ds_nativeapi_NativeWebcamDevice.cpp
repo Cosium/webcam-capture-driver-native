@@ -78,7 +78,7 @@ void fcallback(PixelBuffer& buffer) {
 
 	// buffer.user (= byteBufferARGB): holds direct byte buffer passed from Java to native layer (read in Java to get webcam picture)
 
-	// keep in sync with RoxluWebcamDriver supportedPixelFormats
+	// keep in sync with NativeWebcamDriver supportedPixelFormats
 	if (buffer.pixel_format == CA_YUV420P) {
 		libyuv::I420ToARGB(buffer.plane[0], buffer.stride[0], buffer.plane[1], buffer.stride[1], buffer.plane[2], buffer.stride[2], (uint8_t*)buffer.user, width * 4, width, height);
 	}
