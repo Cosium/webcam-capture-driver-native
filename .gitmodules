@@ -1,7 +1,7 @@
 [submodule "src/libyuv"]
 	path = src/libyuv
-	url = https://github.com/frankpapenmeier/libyuv.git
-	branch = webcam-capture-driver-native
+	url = https://github.com/cosium/libyuv.git
+	branch = cosium-fork
 [submodule "src/video-capture-library"]
 	path = src/video-capture-library
 	url = https://github.com/cosium/video-capture-library.git
