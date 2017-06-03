@@ -101,8 +101,9 @@ public class NativeWebcamDevice implements WebcamDevice, WebcamDevice.BufferAcce
 		byteBufferARGB = ByteBuffer.allocateDirect(currentResolution.width*currentResolution.height*4);
 		byteBufferARGB.order(ByteOrder.nativeOrder());
 
-		if (nativeOpen(indexNative, indexCapability.intValue(), byteBufferARGB) != 0) {
-			throw new WebcamException("Error at native layer while opening webcam");
+		int openErrorCode = nativeOpen(indexNative, indexCapability.intValue(), byteBufferARGB);
+		if (openErrorCode != 0) {
+			throw new WebcamException("Error " + openErrorCode + " at native layer while opening webcam");
 		}
 
 		// Wait for first image to be captured - max wait: 10 seconds
@@ -131,8 +132,9 @@ public class NativeWebcamDevice implements WebcamDevice, WebcamDevice.BufferAcce
 
 	@Override
 	public void close() {
-		if (nativeClose() != 0) {
-			throw new WebcamException("Error at native layer while closing webcam");
+		int closeErrorCode = nativeClose();
+		if (closeErrorCode != 0) {
+			throw new WebcamException("Error " + closeErrorCode + " at native layer while closing webcam");
 		}
 
 		isOpen = false;
