@@ -4,5 +4,5 @@
 	branch = webcam-capture-driver-native
 [submodule "src/video-capture-library"]
 	path = src/video-capture-library
-	url = https://github.com/frankpapenmeier/video-capture-library.git
-	branch = webcam-capture-driver-native
+	url = https://github.com/cosium/video-capture-library.git
+	branch = feature/windows-multiple-streams
